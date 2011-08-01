@@ -21,6 +21,9 @@ namespace PhoolKit;
 
 /**
  * Static helper methods for strings.
+ * 
+ * This class is not final so you can use it as a base class for your own
+ * string utility class.
  *
  * @author Klaus Reimer (k@ailis.de)
  */
@@ -43,7 +46,7 @@ class StringUtils
      * @return string
      *            The escaped text.
      */
-    public static function escapeJS($text)
+    public final static function escapeJS($text)
     {
         return preg_replace(
             array(

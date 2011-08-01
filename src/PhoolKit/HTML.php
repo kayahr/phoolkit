@@ -20,7 +20,7 @@
 namespace PhoolKit;
 
 /**
- * Helper functions for printing certain HTML snippets. It is recommended to
+ * Helper methods for printing certain HTML snippets. It is recommended to
  * inlude this file in all pages and create an alias for it:
  * 
  * <pre>
@@ -33,6 +33,9 @@ namespace PhoolKit;
  * <?h::text("Some text to escape")?>
  * <?h::url("login")?>
  * </pre>
+ * 
+ * This class is not final so you can use it as a base class for your own
+ * HTML helper classes.
  *
  * @author Klaus Reimer (k@ailis.de)
  */
@@ -56,7 +59,7 @@ class HTML
      * @param string $text
      *            The text to print.
      */
-    public static function text($text)
+    public final static function text($text)
     {
         echo htmlspecialchars($text);
     }
@@ -68,7 +71,7 @@ class HTML
      * @param string $text
      *            The text to print.
      */
-    public static function jsText($text)
+    public final static function jsText($text)
     {
         echo StringUtils::escapeJS($text);
     }
@@ -85,7 +88,7 @@ class HTML
      *            directory is printed (Useful for linking to the root index
      *            page)
      */
-    public static function url($url = "")
+    public final static function url($url = "")
     {
         $baseUrl = Request::getBaseUrl();
         if (($baseUrl != ".") || !$url)
@@ -105,7 +108,7 @@ class HTML
      *            directory is printed (Useful for linking to the root index
      *            page)
      */
-    public static function jsUrl($url = "")
+    public final static function jsUrl($url = "")
     {
         $baseUrl = Request::getBaseUrl();
         if (($baseUrl != ".") || !$url)
@@ -120,7 +123,7 @@ class HTML
      * Prints the attributes to be put into the form tag for the currently
      * bound form. 
      */
-    public static function form()
+    public final static function form()
     {
         echo "novalidate onsubmit=\"return new phoolkit.Form(this).submit(function(){\n";
         foreach (self::getForm()->getValidators() as $validator)
@@ -133,7 +136,7 @@ class HTML
     /**
      * Prints the attributes for initially autofocusing a form field. 
      */
-    public static function autoFocus()
+    public final static function autoFocus()
     {
         if (!self::getForm()->hasErrors()) echo " autofocus";
     }
@@ -146,7 +149,7 @@ class HTML
      * @param string $id
      *            Optional ID. Defaults to field name.
      */
-    public static function input($name, $id = NULL)
+    public final static function input($name, $id = NULL)
     {
         static $alreadySetAutoFocus;
         
@@ -169,7 +172,7 @@ class HTML
      * @param string $name
      *            The form field name.
      */  
-    public static function errors($name = NULL)
+    public final static function errors($name = NULL)
     {
         $errors = $name ? self::getForm()->getErrors($name) : array();
         printf("<ul class=\"errors%s\">", 
@@ -189,7 +192,7 @@ class HTML
      * @param Form $form
      *           The form to bind.
      */
-    public static function bindForm($form)
+    public final static function bindForm($form)
     {
         self::$form = $form;
     }

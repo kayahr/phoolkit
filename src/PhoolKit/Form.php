@@ -110,7 +110,7 @@ abstract class Form
      * @return Action
      *            The action.
      */
-    public static function get()
+    public final static function get()
     {
         $className = get_called_class();
 
@@ -146,7 +146,7 @@ abstract class Form
      * @throws IllegalArgumentException
      *            When property could not be written.
      */
-    public function writeProperty($name, $value)
+    public final function writeProperty($name, $value)
     {
         $class = new ReflectionClass($this);
 
@@ -191,7 +191,7 @@ abstract class Form
      *            When specified name does not reference an existing
      *            property.
      */
-    public function readProperty($name)
+    public final function readProperty($name)
     {
         $class = new ReflectionClass($this);
 
@@ -225,7 +225,7 @@ abstract class Form
      * @param string $message
      *            The error message to add.
      */
-    public function addError($name, $message)
+    public final function addError($name, $message)
     {
         if (!array_key_exists($name, $this->errors))
             $this->errors[$name] = array();
@@ -240,7 +240,7 @@ abstract class Form
      * @return array
      *            The error messages. Never null. Maybe empty.
      */
-    public function getErrors($name)
+    public final function getErrors($name)
     {
         if (!array_key_exists($name, $this->errors))
             return array();
@@ -258,7 +258,7 @@ abstract class Form
      * @return boolean
      *            True if errors are available, false if not.
      */
-    public function hasErrors($name = NULL)
+    public final function hasErrors($name = NULL)
     {
         if ($name) return array_key_exists($name, $this->errors);
         return !!$this->errors;
