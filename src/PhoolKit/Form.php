@@ -22,7 +22,7 @@ namespace PhoolKit;
 use ReflectionClass;
 
 /**
- * Base class form forms.
+ * Base class for forms.
  * 
  * @author Klaus Reimer (k@ailis.de)
  */
