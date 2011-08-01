@@ -211,4 +211,53 @@ class HTML
             throw new LogicException("No form bound to HTML");
         return self::$form;
     }
+    
+    /**
+     * Resolves a message key into a message and prints it. The output is
+     * HTML escaped.
+     * 
+     * @param string $key
+     *            The message key.
+     * @param mixed $args___
+     *            Variable number of optional arguments used by the message.
+     * @return The resolved message.
+     */
+    public final static function msg($key, $args___ = NULL)
+    {
+        echo htmlspecialchars(call_user_func_array(
+            array("\PhoolKit\I18N", "getMessage"), func_get_args()));
+    }
+
+    /**
+     * Resolves a message key into a message and prints it. The output is
+     * JavaScript escaped.
+     * 
+     * @param string $key
+     *            The message key.
+     * @param mixed $args___
+     *            Variable number of optional arguments used by the message.
+     * @return The resolved message.
+     */
+    public final static function jsMsg($key, $args___ = NULL)
+    {
+        echo StringUtils::escapeJS(call_user_func_array(
+            array("\PhoolKit\I18N", "getMessage"), func_get_args()));
+    }
+
+    /**
+     * Resolves a message key into a message and prints it. The output is
+     * not escaped in any way. Use this for messages which might contain
+     * HTML tags and you are sure it doesn't harm your website.
+     * 
+     * @param string $key
+     *            The message key.
+     * @param mixed $args___
+     *            Variable number of optional arguments used by the message.
+     * @return The resolved message.
+     */
+    public final static function rawMsg($key, $args___ = NULL)
+    {
+        echo StringUtils::escapeJS(call_user_func_array(
+            array("\PhoolKit\I18N", "getMessage"), func_get_args()));
+    }
 }

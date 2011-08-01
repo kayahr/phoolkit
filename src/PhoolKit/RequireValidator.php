@@ -47,8 +47,8 @@ final class RequireValidator implements Validator
     {
         foreach ($this->fields as $field)
         {
-            if (!$form->readProperty($field))
-                $form->addError($field, "Dieses Feld muss ausgefüllt sein.");
+            if (!$form->readProperty($field)) $form->addError($field, 
+                I18N::getMessage("phoolkit.validation.required"));
         }
     }
 
@@ -57,7 +57,8 @@ final class RequireValidator implements Validator
      */
     public function getScript()
     {
-        $message = StringUtils::escapeJS("Dieses Feld muss ausgefüllt sein.");
+        $message = StringUtils::escapeJS(I18N::getMessage(
+            "phoolkit.validation.required"));
         $script = "var m = '$message';\n";
         foreach ($this->fields as $field)
         {
