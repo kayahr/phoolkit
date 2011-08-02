@@ -20,24 +20,31 @@
 namespace PhoolKit;
 
 /**
- * Validates required fields.
+ * Checks for maximum length of submitted data.
  *
  * @author Klaus Reimer (k@ailis.de)
  */
-final class RequireValidator implements Validator
+final class MinLengthValidator implements Validator
 {
     /** The fields to validate. */
     private $fields;
 
+    /** The minimum length to check for. */
+    private $minLength;
+
     /**
-     * Constructs a new require validator.
+     * Constructor
      *
+     * @param number $minLength
+     *            The minimum length to check for.
      * @param string... $fields___
      *            The field names to validate.
      */
-    public function __construct($fields___)
+    public function __construct($minLength, $fields___)
     {
-        $this->fields = func_get_args();
+        $args = func_get_args();
+        $this->minLength = array_shift($args);
+        $this->fields = $args;
     }
 
     /**
@@ -47,8 +54,9 @@ final class RequireValidator implements Validator
     {
         foreach ($this->fields as $field)
         {
-            if (!$form->readProperty($field)) $form->addError($field, 
-                I18N::getMessage("phoolkit.validation.required"));
+            if (strlen($form->readProperty($field)) < $this->minLength)
+                $form->addError($field, I18N::getMessage(
+                    "phoolkit.validation.minLength", $this->minLength));
         }
     }
 
@@ -57,13 +65,15 @@ final class RequireValidator implements Validator
      */
     public function getScript()
     {
+        $minLength = $this->minLength;
         $message = StringUtils::escapeJS(I18N::getMessage(
-            "phoolkit.validation.required"));
+            "phoolkit.validation.minLength", $minLength));
         $script = "var m = '$message';\n";
         foreach ($this->fields as $field)
         {
             $property = StringUtils::escapeJS($field);
-            $script .= "if (!this.get('$property')) this.error('$property', m);\n";
+            $script .= "if (this.get('$property').length < $minLength) " .
+                "this.error('$property', m);\n";
         }
         return $script;
     }

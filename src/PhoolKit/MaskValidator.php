@@ -20,24 +20,34 @@
 namespace PhoolKit;
 
 /**
- * Validates required fields.
+ * Validates a form field with a regular expression mask.
  *
  * @author Klaus Reimer (k@ailis.de)
  */
-final class RequireValidator implements Validator
+final class MaskValidator implements Validator
 {
     /** The fields to validate. */
     private $fields;
 
+    /** The mask as a regular expression. */
+    private $mask;
+
     /**
-     * Constructs a new require validator.
+     * Constructor
+     *
+     * @param number $mask
+     *            The mask as a regular expression. Must be enclosed with
+     *            slashes and can use switches after the expression.
+     *            Example: /[a-z]{5}/i
      *
      * @param string... $fields___
      *            The field names to validate.
      */
-    public function __construct($fields___)
+    public function __construct($mask, $fields___)
     {
-        $this->fields = func_get_args();
+        $args = func_get_args();
+        $this->mask = array_shift($args);
+        $this->fields = $args;
     }
 
     /**
@@ -47,8 +57,9 @@ final class RequireValidator implements Validator
     {
         foreach ($this->fields as $field)
         {
-            if (!$form->readProperty($field)) $form->addError($field, 
-                I18N::getMessage("phoolkit.validation.required"));
+            if (!preg_match($this->mask, $form->readProperty($field)))
+                $form->addError($field, I18N::getMessage(
+                    "phoolkit.validation.mask", $this->mask));
         }
     }
 
@@ -57,13 +68,16 @@ final class RequireValidator implements Validator
      */
     public function getScript()
     {
+        $mask = $this->mask;
         $message = StringUtils::escapeJS(I18N::getMessage(
-            "phoolkit.validation.required"));
+            "phoolkit.validation.mask", $mask));
         $script = "var m = '$message';\n";
+        $script .= "var v = $mask;\n";
         foreach ($this->fields as $field)
         {
             $property = StringUtils::escapeJS($field);
-            $script .= "if (!this.get('$property')) this.error('$property', m);\n";
+            $script .= "if (!this.get('$property').match(v)) " .
+                "this.error('$property', m);\n";
         }
         return $script;
     }
