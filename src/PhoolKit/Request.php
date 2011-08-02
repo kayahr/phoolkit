@@ -19,8 +19,6 @@
 
 namespace PhoolKit;
 
-use LogicException;
-
 /**
  * This class provides helper functions to work with the current request.
  *
@@ -30,10 +28,10 @@ final class Request
 {
     /** The base directory. */
     private static $baseDir;
-    
+
     /** The base URL. */
     private static $baseUrl;
-    
+
     /**
      * Returns the value of the parameter with the specified name. When
      * the parameter was not found then the specified default value or NULL
@@ -60,7 +58,7 @@ final class Request
     /**
      * Returns all request parameters. All parameter values are correclty
      * unescaped, no matter how PHP's magic quotes feature is configured.
-     * 
+     *
      * @return array
      *            The request parameters.
      */
@@ -71,31 +69,27 @@ final class Request
             $params[$name] = self::getParam($name);
         return $params;
     }
-    
+
     /**
      * Returns the base directory. This can't be automatically detected and
      * must be set by the application using PhoolKit. Simply call
      * Request::setBaseDir(dirname(__FILE__)) in your bootstrap PHP
      * file.
-     * 
+     *
      * @return string
-     *            The base directory. Never null.
-     * @throws LogicException
-     *            When no base directory was set yet.
+     *            The base directory or NULL when no base directory was set.
      */
     public static function getBaseDir()
     {
-        if (!self::$baseDir)
-            throw new LogicException("No base directory set yet");
         return self::$baseDir;
     }
-    
+
     /**
      * Sets the base directory. This can't be automatically detected and
      * must be set by the application using PhoolKit. Simply call
      * Request::setBaseDir(dirname(__FILE__)) in your bootstrap PHP
      * file.
-     * 
+     *
      * @param string $baseDir
      *            The base directory to set.
      */
@@ -103,41 +97,63 @@ final class Request
     {
         self::$baseDir = $baseDir;
     }
-    
+
     /**
      * Returns the base URL. This URL does not have a trailing slash. If this
-     * URL is not set manually (With the setBaseUrl method) then it is 
-     * automatically calculated by looking at the set base directory, the 
+     * URL is not set manually (With the setBaseUrl method) then it is
+     * automatically calculated by looking at the set base directory, the
      * SCRIPT_FILENAME and the PATH_INFO variables.
-     * 
+     *
      * @return string
      *            The base URL.
      */
     public static function getBaseUrl()
     {
         if (self::$baseUrl) return self::$baseUrl;
-        $baseUrl = str_repeat("/..",
-            substr_count(realpath(dirname($_SERVER["SCRIPT_FILENAME"])),
-            DIRECTORY_SEPARATOR) - substr_count(self::getBaseDir(),
-            DIRECTORY_SEPARATOR) + (isset($_SERVER["PATH_INFO"]) ?
-            substr_count($_SERVER["PATH_INFO"], "/") : 0));
-        if (!$baseUrl)
-            $baseUrl = ".";
+        $baseDir = self::getBaseDir();
+        if ($baseDir)
+        {
+            $baseUrl = str_repeat("/..",
+                substr_count(realpath(dirname($_SERVER["SCRIPT_FILENAME"])),
+                DIRECTORY_SEPARATOR) - substr_count($baseDir,
+                DIRECTORY_SEPARATOR) + (isset($_SERVER["PATH_INFO"]) ?
+                substr_count($_SERVER["PATH_INFO"], "/") : 0));
+            if (!$baseUrl)
+                $baseUrl = ".";
+            else
+                $baseUrl = substr($baseUrl, 1);
+        }
         else
-            $baseUrl = substr($baseUrl, 1);
+        {
+            $baseUrl = ".";
+        }
         self::$baseUrl = $baseUrl;
-        return $baseUrl;        
+        return $baseUrl;
     }
-    
+
     /**
      * Sets the base URL. This is normally not needed but can be set to
      * skip the auto-calculation of the base URL on each request.
-     * 
+     *
      * @param string $baseUrl
      *            The base URL to set. Must not have a trailing slash.
      */
     public static function setBaseUrl($baseUrl)
     {
         self::$baseUrl = $baseUrl;
+    }
+
+    /**
+     * Redirects the request to the specified target.
+     *
+     * TODO Target should be transformed into an absolute URL.
+     *
+     * @param string $target
+     *            The target to redirect to.
+     */
+    public static function redirect($target)
+    {
+        header("Location: " . $target);
+        exit();
     }
 }
