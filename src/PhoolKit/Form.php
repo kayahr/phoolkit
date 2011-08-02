@@ -20,20 +20,21 @@
 namespace PhoolKit;
 
 use ReflectionClass;
+use InvalidArgumentException;
 
 /**
  * Base class for forms.
- * 
+ *
  * @author Klaus Reimer (k@ailis.de)
  */
 abstract class Form
 {
     /** The form storage. */
     private static $forms = array();
-    
+
     /** Validation errors. */
     private $errors = array();
-    
+
     /**
      * Private constructor to prevent instantiation from outside.
      */
@@ -46,17 +47,17 @@ abstract class Form
      * Parses the form. Use this method to retrieve a form inside of an
      * action class where you want to process the submitted form. This
      * method parses all request parameters into the defined form properties
-     * and also validates them. 
-     * 
+     * and also validates them.
+     *
      * If validation fails then the specified input page is displayed.
      * This should be the page from which the form was submitted so the form
      * is redisplayed together with the error messages.
-     * 
+     *
      * If no input page is specified then the caller must check for errors
      * itself by calling the hasErrors() method for example.
      *
      * @param string $inputPage
-     *             Optional input page. 
+     *             Optional input page.
      * @return Form
      *             The parsed form.
      */
@@ -91,7 +92,7 @@ abstract class Form
             $func($inputPage);
             exit();
         }
-        
+
         // Return the form.
         return $form;
     }
@@ -103,10 +104,9 @@ abstract class Form
      * action is instantiated, the init() method is called and the action is
      * cached in the storage.
      *
-     * @param string $path
-     *            The action path. Example: users/login
-     * @param string $method
-     *            The request method. Defaults to POST.
+     * You can pass a variable number of arguments to this method. They will
+     * be passed to the init() method of the form if a new form is created.
+     *
      * @return Action
      *            The action.
      */
@@ -120,7 +120,7 @@ abstract class Form
 
         // Create and return a new form.
         $form = new $className;
-        $form->init();
+        call_user_func_array(array($form, "init"), func_get_args());
         self::$forms[$className] = $form;
         return $form;
     }
@@ -138,7 +138,7 @@ abstract class Form
      * Writes a value to a property. It first tries to set a public property.
      * If this fails then it tries to invoke a public setter. If this fails
      * too then an exception is thrown.
-     * 
+     *
      * @param string $name
      *            The property name.
      * @param mixed $value
@@ -177,7 +177,7 @@ abstract class Form
         throw new InvalidArgumentException("No property '$name' found in '" .
             get_called_class() . "'");
     }
-    
+
     /**
      * Returns a property from the object. If the property is public then
      * it is accessed directly. Otherwise a getter method is searched and
@@ -214,9 +214,9 @@ abstract class Form
 
         // Can't access property.
         throw new InvalidArgumentException("No property '$name' found in '" .
-            get_called_class . "'");
+            get_called_class() . "'");
     }
-   
+
     /**
      * Adds an error message for a field.
      *
@@ -231,7 +231,7 @@ abstract class Form
             $this->errors[$name] = array();
         $this->errors[$name][] = $message;
     }
-    
+
     /**
      * Returns the error messages for a field.
      *
@@ -246,7 +246,7 @@ abstract class Form
             return array();
         return $this->errors[$name];
     }
-    
+
     /**
      * Checks if errors for the specified field are available. If no field
      * is specified then this method checks if at least one field of the
@@ -262,5 +262,24 @@ abstract class Form
     {
         if ($name) return array_key_exists($name, $this->errors);
         return !!$this->errors;
+    }
+
+    /**
+     * Initializes the form.
+     */
+    public function init()
+    {
+        // Default implementation does nothing.
+    }
+
+    /**
+     * Returns the list of validators to use for this form.
+     *
+     * @return array
+     *            The list of validators to use. Must not be null.
+     */
+    public function getValidators()
+    {
+        return array();
     }
 }
