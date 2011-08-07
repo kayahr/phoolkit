@@ -31,7 +31,7 @@ final class Request
 
     /** The base URL. */
     private static $baseUrl;
-
+    
     /**
      * Returns the value of the parameter with the specified name. When
      * the parameter was not found then the specified default value or NULL

@@ -268,11 +268,13 @@ class HTML
      * Prints the HTML code for the error list of a form field.
      *
      * @param string $name
-     *            The form field name.
+     *            The form field name. If not specified then the global
+     *            errors are displayed.
      */
     public final static function errors($name = NULL)
     {
-        $errors = $name ? self::getForm()->getErrors($name) : array();
+        $errors = $name ? self::getForm()->getErrors($name) :
+            Messages::getErrors();
         printf("<ul class=\"errors%s\">",
             $name ? " " . htmlspecialchars($name) : "");
         foreach ($errors as $error)
