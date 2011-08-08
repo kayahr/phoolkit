@@ -43,6 +43,9 @@ class HTML
 {
     /** The currently bound form. */
     private static $form = NULL;
+    
+    /** The currently bound field. */
+    private static $field = NULL;
 
     /** If auto focus was already set in a form. */
     private static $alreadySetAutoFocus;
@@ -146,7 +149,32 @@ class HTML
     {
         if (!self::getForm()->hasErrors()) echo " autofocus";
     }
-
+    
+    /**
+     * Prints a class attribute with the specified class names. If bound to
+     * a form field then the "error" class is automatically added when the
+     * form field has detected a validation error.
+     * 
+     * @param string $classes
+     *           The class names to add (Space-separated). Defaults to empty
+     *           string.
+     */
+    public final static function classes($classes = "")
+    {
+        if (self::hasBoundField() &&
+            self::getForm()->hasErrors(self::getField()))
+        {
+            if ($classes) $classes .= " ";
+            $classes .= "error";
+        }
+        if ($classes)
+        {
+            echo " class=\"";
+            echo htmlspecialchars($classes);
+            echo "\"";
+        }
+    }
+    
     /**
      * Prints the attributes for a normal form input field (text, password and
      * hidden).
@@ -156,9 +184,10 @@ class HTML
      * @param string $id
      *            Optional ID. Defaults to field name.
      */
-    public final static function input($name, $id = NULL)
+    public final static function input($id = NULL)
     {
         $form = self::getForm();
+        $name = self::getField();
         $value = $form->readProperty($name);
         if (!$id) $id = $name;
         $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
@@ -174,14 +203,13 @@ class HTML
     /**
      * Prints the attributes for a form checkbox input field.
      *
-     * @param string $name
-     *            The form field name.
      * @param string $id
      *            Optional ID. Defaults to field name.
      */
-    public final static function checkbox($name, $id = NULL)
+    public final static function checkbox($id = NULL)
     {
         $form = self::getForm();
+        $name = self::getField();
         $value = $form->readProperty($name);
         if (!$id) $id = $name;
         $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
@@ -197,16 +225,15 @@ class HTML
     /**
      * Prints the attributes for a form radio input field.
      *
-     * @param string $name
-     *            The form field name.
      * @param string $value
      *            The value of the radio button.
      * @param string $id
      *            Optional ID. Defaults to field name.
      */
-    public final static function radio($name, $value, $id = NULL)
+    public final static function radio($value, $id = NULL)
     {
         $form = self::getForm();
+        $name = self::getField();
         $realValue = $form->readProperty($name);
         if (!$id) $id = $name . "-" . $value;
         $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
@@ -223,14 +250,13 @@ class HTML
     /**
      * Prints the attributes for a form select field.
      *
-     * @param string $name
-     *            The form field name.
      * @param string $id
      *            Optional ID. Defaults to field name.
      */
-    public final static function select($name, $id = NULL)
+    public final static function select($id = NULL)
     {
         $form = self::getForm();
+        $name = self::getField();
         if (!$id) $id = $name;
         $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
         if ($setAutoFocus) self::$alreadySetAutoFocus = $setAutoFocus;
@@ -244,15 +270,14 @@ class HTML
     /**
      * Prints the options for a form select field.
      *
-     * @param $name
-     *            The field name.
      * @param $options
      *            A map with the options. Map key is the value used in the
      *            form. Map value is the displayed text.
      */
-    public final static function options($name, $options)
+    public final static function options($options)
     {
         $form = self::getForm();
+        $name = self::getField();
         $realValue = $form->readProperty($name);
         foreach ($options as $value => $caption)
         {
@@ -271,15 +296,19 @@ class HTML
      *            The form field name. If not specified then the global
      *            errors are displayed.
      */
-    public final static function errors($name = NULL)
+    public final static function messages()
     {
-        $errors = $name ? self::getForm()->getErrors($name) :
-            Messages::getErrors();
-        printf("<ul class=\"errors%s\">",
-            $name ? " " . htmlspecialchars($name) : "");
+        if (self::hasBoundField())
+            $errors = self::getForm()->getErrors(self::getField());
+        else
+            $errors = Messages::getErrors();
+        echo "<ul class=\"messages";
+        if (self::hasBoundField())
+            echo " " . self::getField();
+        echo "\">";
         foreach ($errors as $error)
         {
-            echo "<li>";
+            echo "<li class=\"error\">";
             echo htmlspecialchars($error);
             echo "</li>";
         }
@@ -295,8 +324,37 @@ class HTML
     public final static function bindForm($form)
     {
         self::$form = $form;
+        self::$field = NULL;
     }
 
+    /**
+     * Binds the specified field.
+     *
+     * @param string $field
+     *           The field to bind.
+     */
+    public final static function bindField($field)
+    {
+        self::$field = $field;
+    }
+    
+    /**
+     * Unbinds from the current field.
+     */
+    public final static function unbindField()
+    {
+        self::$field = NULL;
+    }
+    
+    /**
+     * Unbinds from the current form.
+     */
+    public final static function unbindForm()
+    {
+        self::$field = NULL;
+        self::$form = NULL;
+    }
+    
     /**
      * Returns the bound form. If no form is bound then an exception is thrown.
      *
@@ -310,6 +368,33 @@ class HTML
         if (!self::$form)
             throw new LogicException("No form bound to HTML");
         return self::$form;
+    }
+
+    /**
+     * Returns the bound field. If no field is bound then an exception is
+     * thrown.
+     *
+     * @return string
+     *            The bound field. Never null.
+     * @throws LogicException
+     *            When no field is bound.
+     */
+    private static function getField()
+    {
+        if (!self::$field)
+            throw new LogicException("No field bound to HTML");
+        return self::$field;
+    }
+    
+    /**
+     * Checks if bound to field.
+     * 
+     * @return boolean
+     *            True if bound to field, false if not.
+     */
+    private static function hasBoundField()
+    {
+        return !!self::$field;
     }
 
     /**

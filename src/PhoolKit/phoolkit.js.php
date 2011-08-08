@@ -1,3 +1,30 @@
+<?php
+/*
+* PhoolKit - A PHP toolkit.
+* Copyright (C) 2011  Klaus Reimer <k@ailis.de>
+*
+* This library is free software: you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or (at
+* your option) any later version.
+*
+* This library is distributed in the hope that it will be useful, but
+* WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+* General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with this library.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+header("Content-Type: application/javascript");
+
+$expires = 5 * 60;
+header("Pragma: public");
+header("Cache-Control: maxage=".$expires);
+header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
+
+?>
 /**
  * The phoolkit namespace.
  * @type {Object}
@@ -43,7 +70,8 @@ phoolkit.Form.prototype.validate = function(validations)
     this.valid = true;
     try
     {
-        $("ul.errors", this.form).html("");
+        $("ul.messages").html("");
+        $("input.error", this.form).removeClass("error");
         validations.call(this);
     }
     catch (e)
@@ -68,7 +96,8 @@ phoolkit.Form.prototype.validate = function(validations)
  */
 phoolkit.Form.prototype.error = function(field, message)
 {
-    $("ul.errors." + field, this.form).append("<li>" + message + "</li>");
+    $("ul.messages." + field, this.form).append('<li class="error">' + message + "</li>");
+    $("#" + field).addClass("error");
     if (this.valid) this.form[field].focus();
     this.valid = false;
 };
