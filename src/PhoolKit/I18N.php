@@ -34,7 +34,8 @@ final class I18N
         "phoolkit.validation.required" => "This field is required.",
         "phoolkit.validation.minLength" => "Please enter at least %d characters",
         "phoolkit.validation.maxLength" => "Please enter no more than %d characters",
-        "phoolkit.validation.mask" => "Please enter a valid value"
+        "phoolkit.validation.mask" => "Please enter a valid value",
+        "phoolkit.validation.passwordConfirm" => "Password doesn't match the confirmation"
     );
 
     /**
