@@ -185,13 +185,15 @@ abstract class Form
      *
      * @param string $name
      *            The property name.
+     * @param mixed $index
+     *            Optional index inside the property (For arrays and maps).
      * @return mixed
      *            The property value.
      * @throws InvalidArgumentException
      *            When specified name does not reference an existing
      *            property.
      */
-    public final function readProperty($name)
+    public final function readProperty($name, $index = NULL)
     {
         $class = new ReflectionClass($this);
 
@@ -200,7 +202,11 @@ abstract class Form
         {
             $property = $class->getProperty($name);
             if ($property->isPublic())
-                return $property->getValue($this);
+            {
+                $value = $property->getValue($this);
+                if (is_array($value)) $value = @$value[$index];
+                return $value;
+            }
         }
 
         // If a public getter exists then use this.
@@ -209,7 +215,11 @@ abstract class Form
         {
             $method = $class->getMethod($methodName);
             if ($method->isPublic())
-                return $method->invoke($this);
+            {
+                $value = $method->invoke($this);
+                if (is_array($value)) $value = @$value[$index];
+                return $value;
+            }
         }
 
         // Can't access property.

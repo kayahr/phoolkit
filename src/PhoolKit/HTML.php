@@ -43,9 +43,12 @@ class HTML
 {
     /** The currently bound form. */
     private static $form = NULL;
-    
+
     /** The currently bound field. */
     private static $field = NULL;
+
+    /** The index inside the currently bound field. */
+    private static $fieldIndex = NULL;
 
     /** If auto focus was already set in a form. */
     private static $alreadySetAutoFocus;
@@ -149,12 +152,12 @@ class HTML
     {
         if (!self::getForm()->hasErrors()) echo " autofocus";
     }
-    
+
     /**
      * Prints a class attribute with the specified class names. If bound to
      * a form field then the "error" class is automatically added when the
      * form field has detected a validation error.
-     * 
+     *
      * @param string $classes
      *           The class names to add (Space-separated). Defaults to empty
      *           string.
@@ -174,7 +177,7 @@ class HTML
             echo "\"";
         }
     }
-    
+
     /**
      * Prints the attributes for a normal form input field (text, password and
      * hidden).
@@ -188,7 +191,7 @@ class HTML
     {
         $form = self::getForm();
         $name = self::getField();
-        $value = $form->readProperty($name);
+        $value = $form->readProperty($name, self::$fieldIndex);
         if (!$id) $id = $name;
         $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
         if ($setAutoFocus) self::$alreadySetAutoFocus = $setAutoFocus;
@@ -201,6 +204,23 @@ class HTML
     }
 
     /**
+     * Prints the attributes for a form field label.
+     *
+     * @param string $id
+     *            Optional ID. Defaults to field name.
+     */
+    public final static function label($id = NULL)
+    {
+        if (!$id)
+        {
+            $id = self::getField();
+            $index = self::$fieldIndex;
+            if ($index) $id .= "-$index";
+        }
+        printf("for=\"%s\"", htmlspecialchars($id));
+    }
+
+    /**
      * Prints the attributes for a form checkbox input field.
      *
      * @param string $id
@@ -210,8 +230,14 @@ class HTML
     {
         $form = self::getForm();
         $name = self::getField();
-        $value = $form->readProperty($name);
-        if (!$id) $id = $name;
+        $value = $form->readProperty($name, self::$fieldIndex);
+        $index = self::$fieldIndex;
+        if (!$id)
+        {
+            $id = $name;
+            if ($index) $id .= "-$index";
+        }
+        if ($index) $name .= "[$index]";
         $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
         if ($setAutoFocus) self::$alreadySetAutoFocus = $setAutoFocus;
         printf("type=\"checkbox\" id=\"%s\" name=\"%s\" value=\"1\"%s%s",
@@ -234,7 +260,7 @@ class HTML
     {
         $form = self::getForm();
         $name = self::getField();
-        $realValue = $form->readProperty($name);
+        $realValue = $form->readProperty($name, self::$fieldIndex);
         if (!$id) $id = $name . "-" . $value;
         $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
         if ($setAutoFocus) self::$alreadySetAutoFocus = $setAutoFocus;
@@ -278,7 +304,7 @@ class HTML
     {
         $form = self::getForm();
         $name = self::getField();
-        $realValue = $form->readProperty($name);
+        $realValue = $form->readProperty($name, self::$fieldIndex);
         foreach ($options as $value => $caption)
         {
             printf("<option value=\"%s\"%s>%s</option>\n",
@@ -325,6 +351,7 @@ class HTML
     {
         self::$form = $form;
         self::$field = NULL;
+        self::$fieldIndex = NULL;
     }
 
     /**
@@ -332,29 +359,35 @@ class HTML
      *
      * @param string $field
      *           The field to bind.
+     * @param mixed $index
+     *           The optional field index. Can be a number (For array access),
+     *           a string (For map access) or NULL if no index is used.
      */
-    public final static function bindField($field)
+    public final static function bindField($field, $index = NULL)
     {
         self::$field = $field;
+        self::$fieldIndex = $index;
     }
-    
+
     /**
      * Unbinds from the current field.
      */
     public final static function unbindField()
     {
         self::$field = NULL;
+        self::$fieldIndex = NULL;
     }
-    
+
     /**
      * Unbinds from the current form.
      */
     public final static function unbindForm()
     {
         self::$field = NULL;
+        self::$fieldIndex = NULL;
         self::$form = NULL;
     }
-    
+
     /**
      * Returns the bound form. If no form is bound then an exception is thrown.
      *
@@ -385,10 +418,10 @@ class HTML
             throw new LogicException("No field bound to HTML");
         return self::$field;
     }
-    
+
     /**
      * Checks if bound to field.
-     * 
+     *
      * @return boolean
      *            True if bound to field, false if not.
      */
