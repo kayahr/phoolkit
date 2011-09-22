@@ -20,11 +20,14 @@
 namespace PhoolKit;
 
 /**
- * Checks for minimum length of submitted data.
+ * Checks for minimum length of submitted data when data was submitted at all.
+ * This validator is useful for checking a minimum length of a password for
+ * example in forms where the password field can be left empty when no
+ * password change should be performed.
  *
  * @author Klaus Reimer (k@ailis.de)
  */
-final class MinLengthValidator implements Validator
+final class MinLengthIfSetValidator implements Validator
 {
     /** The fields to validate. */
     private $fields;
@@ -54,7 +57,8 @@ final class MinLengthValidator implements Validator
     {
         foreach ($this->fields as $field)
         {
-            if (strlen($form->readProperty($field)) < $this->minLength)
+            $value = $form->readProperty($field);
+            if (strlen($value) > 0 && strlen($value) < $this->minLength)
                 $form->addError($field, I18N::getMessage(
                     "phoolkit.validation.minLength", $this->minLength));
         }
@@ -72,7 +76,7 @@ final class MinLengthValidator implements Validator
         foreach ($this->fields as $field)
         {
             $property = StringUtils::escapeJS($field);
-            $script .= "if (this.get('$property').length < $minLength) " .
+            $script .= "if (this.get('$property').length > 0 && this.get('$property').length < $minLength) " .
                 "this.error('$property', m);\n";
         }
         return $script;
