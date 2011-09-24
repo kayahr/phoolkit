@@ -192,7 +192,13 @@ class HTML
         $form = self::getForm();
         $name = self::getField();
         $value = $form->readProperty($name, self::$fieldIndex);
-        if (!$id) $id = $name;
+        $index = self::$fieldIndex;
+        if (!$id)
+        {
+            $id = $name;
+            if (!is_null($index)) $id .= "-$index";
+        }
+        if (!is_null($index)) $name .= "[$index]";
         $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
         if ($setAutoFocus) self::$alreadySetAutoFocus = $setAutoFocus;
         printf("id=\"%s\" name=\"%s\" value=\"%s\"%s",
@@ -215,7 +221,7 @@ class HTML
         {
             $id = self::getField();
             $index = self::$fieldIndex;
-            if ($index) $id .= "-$index";
+            if (!is_null($index)) $id .= "-$index";
         }
         printf("for=\"%s\"", htmlspecialchars($id));
     }
@@ -235,9 +241,9 @@ class HTML
         if (!$id)
         {
             $id = $name;
-            if ($index) $id .= "-$index";
+            if (!is_null($index)) $id .= "-$index";
         }
-        if ($index) $name .= "[$index]";
+        if (!is_null($index)) $name .= "[$index]";
         $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
         if ($setAutoFocus) self::$alreadySetAutoFocus = $setAutoFocus;
         printf("type=\"checkbox\" id=\"%s\" name=\"%s\" value=\"1\"%s%s",
