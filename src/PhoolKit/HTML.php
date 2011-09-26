@@ -52,13 +52,106 @@ class HTML
 
     /** If auto focus was already set in a form. */
     private static $alreadySetAutoFocus;
+    
+    /** The bbCode parser. */
+    private static $bbParser = NULL; 
 
     /**
      * Private constructor to prevent instantiation.
      */
     private function __construct()
     {
-        // Nothing to do here
+        // Empty
+    }
+    
+    /**
+     * Returns the bbCode parser if available
+     * 
+     * @return mixed
+     *            The bbCode parser or false if not available.
+     */
+    private final static function getBBParser()
+    {
+        if (is_null(self::$bbParser))
+        {
+            if (extension_loaded("bbcode"))
+            {
+                $code = array(
+                    "" => array(
+                        "type" => BBCODE_TYPE_ROOT,
+                		"childs" => "!li"),
+                    "noparse" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                		"childs" => ""),
+                    "br" => array(
+                        "type" => BBCODE_TYPE_SINGLE,
+                        "open_tag" => "<br />",
+                        "close_tag" => ""),
+                	"b" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<b>",
+                        "close_tag" => "</b>"),
+                    "i" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<i>",
+                        "close_tag" => "</i>"),
+                    "u" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<u>",
+                        "close_tag" => "</u>"),
+                    "s" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<s>",
+                        "close_tag" => "</s>"),
+                    "code" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<code>",
+                        "close_tag" => "</code>"),
+                	"url" => array(
+                        "type" => BBCODE_TYPE_OPTARG,
+                        "open_tag" => "<a href=\"{PARAM}\">",
+                        "close_tag" => "</a>",
+                        "default_arg" => "{CONTENT}"),
+                	"img" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<img src=\"",
+                        "close_tag" => "\" alt=\"\" />"),
+                	"color" => array(
+                        "type" => BBCODE_TYPE_ARG,
+                        "open_tag" => "<span style=\"color:{PARAM}\">",
+                        "close_tag" => "</span>"),
+                	"size" => array(
+                        "type" => BBCODE_TYPE_ARG,
+                        "open_tag" => "<span style=\"font-size:{PARAM}px\">",
+                        "close_tag" => "</span>"),
+                	"list" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<ul>",
+                        "close_tag" => "</ul>",
+                        "childs" => "li"),
+                	"ul" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<ul>",
+                        "close_tag" => "</ul>",
+                        "childs" => "li"),
+                	"ol" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<ol>",
+                        "close_tag" => "</ol>",
+                        "childs" => "li"),
+                	"li" => array(
+                        "type" => BBCODE_TYPE_NOARG,
+                        "open_tag" => "<li>",
+                        "close_tag" => "</li>")
+                );
+                self::$bbParser = bbcode_create($code);
+            }
+            else
+            { 
+                self::$bbParser = false;
+            }
+        }        
+        return self::$bbParser;
     }
 
     /**
@@ -435,6 +528,22 @@ class HTML
     {
         return !!self::$field;
     }
+    
+    /**
+     * Parses the specified text as bbCode if a bbCode parser is available.
+     * If not then the text is returned unmodified.
+     * 
+     * @param string $text
+     *            The text to parse.
+     * @return The parsed text or the original text if parser not available.
+     */
+    private final static function bbParse($text)
+    {
+        // Get the bbCode parser. Return text as-is if not available.
+        $bbParser = self::getBBParser();
+        if (!$bbParser) return $text;
+        return bbcode_parse($bbParser, $text);
+    }
 
     /**
      * Resolves a message key into a message and prints it. The output is
@@ -448,10 +557,11 @@ class HTML
      */
     public final static function msg($key, $args___ = NULL)
     {
-        echo htmlspecialchars(call_user_func_array(
+        $text = htmlspecialchars(call_user_func_array(
             array("\PhoolKit\I18N", "getMessage"), func_get_args()));
+        echo self::bbParse($text);
     }
-
+    
     /**
      * Resolves a message key into a message and prints it. The output is
      * JavaScript escaped.
