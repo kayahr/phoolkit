@@ -32,6 +32,12 @@ final class Request
     /** The base URL. */
     private static $baseUrl;
     
+	/** The parsed media types. */
+    private static $mediaTypes = NULL;
+    
+    /** The parsed locales. */
+    private static $locales = NULL;
+    
     /**
      * Returns the value of the parameter with the specified name. When
      * the parameter was not found then the specified default value or NULL
@@ -156,4 +162,148 @@ final class Request
         header("Location: " . $target);
         exit();
     }
+
+    /**
+     * Returns the list of accepted media types. The list is ordered by the
+     * accept quality. So the first entry is the most preferred one.
+     *
+     * @return array
+     *            The list of accepted media types.
+     */
+    public static function getMediaTypes()
+    {
+        if (is_null(self::$mediaTypes))
+        {
+            self::$mediaTypes = self::parseValueRange($_SERVER["HTTP_ACCEPT"]);
+        }
+        return array_keys(self::$mediaTypes);
+    }
+    
+    /**
+     * Returns the list of accepted locales. The list is ordered by the
+     * accept quality. So the first entry is the most preferred one.
+     *
+     * @param array
+     *            Optional list of available locales to filter by the accepted
+     *            browser locales. If not specified then the browser locales
+     *            are returned.
+     * @return array
+     *            The list of accepted locales.
+     */
+    public static function getLocales($available = NULL)
+    {
+        if (is_null(self::$locales))
+        {
+            self::$locales = self::parseValueRange(
+                $_SERVER["HTTP_ACCEPT_LANGUAGE"]);
+        }
+        $locales = array_keys(self::$locales);
+        if (is_null($available)) return $locales;
+        $result = array();
+        foreach ($locales as $locale)
+        {
+            $locale = self::matchLocale($available, $locale);
+            if ($locale)
+                if (!in_array($locale, $result)) $result[] = $locale;
+        }
+        return $result;
+    }
+    
+    /**
+     * Tries to match a locale against a list of available locales. Hyphens
+     * are converted to underscores. Checks are done case-insensitive.
+     * A full locale can match an available language-only locale.
+     * 
+     * @param array $available
+     *            The list of available locales.
+     * @param string $locale
+     *            The locale to check.
+     * @return string
+     *            The entry from the available locales which matches the
+     *            specified locale. NULL if non matches.
+     */
+    private static function matchLocale($available, $locale)
+    {
+        $locale = str_replace("-", "_", strtolower($locale));
+        
+        // First try to find the full locale
+        foreach ($available as $check)
+            if (strtolower($check) == $locale) return $check;
+        
+        // Then try to find only the language
+        $pos = strpos($locale, "_");
+        if ($pos !== false)
+        {
+            $locale = substr($locale, 0, $pos);
+            foreach ($available as $check)
+                if (strtolower($check) == $locale) return $check;
+        }
+        
+        // No match
+        return NULL;
+    }
+    
+    /**
+     * Returns the preferred locale or the specified default locale if 
+     * no locale could be determined automatically.
+     * 
+     * @param array
+     *            Optional list of available locales to filter the accepted
+     *            browser locales by.
+     * @param default
+     *            The default locale to return if no matching locale was
+     *            found. Defaults to NULL.
+     * @return string
+     *             The preferred locale.
+     */
+    public static function getLocale($available = NULL, $default = NULL)
+    {
+        $locales = self::getLocales($available);
+        return count($locales) > 0 ? $locales[0] : $default;
+    }
+    
+    /**
+     * Parses a value range (As used by the "Accept" header for example).
+     * Returns an array with the values as key and an array with the
+     * quality and the extensions as value.
+     *
+     * @param string $valueRange
+     *            The value range to parse.
+     * @return array
+     *            The parsed values.
+     */
+    private static function parseValueRange($valueRange)
+    {
+        $values = array();
+        $ranges = explode(",", $valueRange);
+        foreach ($ranges as $range)
+        {
+            $params = explode(";", $range);
+            $value = array_shift($params);
+            $quality = 1.0;
+            $extensions = array();
+            foreach ($params as $param)
+            {
+                $parts = explode("=", $param);
+                $extName = array_shift($parts);
+                $extValue = array_shift($parts);
+                if ($extName == "q")
+                    $quality = floatval($extValue);
+                else
+                    $extensions[$extKey] = $extValue;
+            }
+            $values[$value] = array(
+                "quality" => $quality,
+                "extensions" => $extensions
+            );
+        }
+        uasort($values, function($a, $b) {
+            $q1 = $a["quality"];
+            $q2 = $b["quality"];
+            if ($q1 == $q2) return 0;
+            if ($q1 > $q2) return -1;
+            return 1;
+        });
+        return $values;
+    }    
 }
