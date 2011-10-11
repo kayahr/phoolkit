@@ -424,13 +424,28 @@ class HTML
     public final static function messages()
     {
         if (self::hasBoundField())
+        {
             $errors = self::getForm()->getErrors(self::getField());
+            $infos = array();
+        }
         else
+        {
             $errors = Messages::getErrors();
-        echo "<ul class=\"messages";
+            $infos = Messages::getInfos();
+            Messages::removeInfos();
+        }
+        echo "<ul class=\"messages ";
         if (self::hasBoundField())
-            echo " " . self::getField();
+            echo self::getField();
+        else
+            echo "global";
         echo "\">";
+        foreach ($infos as $info)
+        {
+            echo "<li class=\"info\">";
+            echo htmlspecialchars($info);
+            echo "</li>";
+        }
         foreach ($errors as $error)
         {
             echo "<li class=\"error\">";

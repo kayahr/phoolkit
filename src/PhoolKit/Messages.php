@@ -59,6 +59,70 @@ final class Messages
     {
         self::$errors[] = $message;
     }
+    
+    /**
+     * Returns (and creates if neccessary) the array with the info
+     * messages.
+     * 
+     * @return array
+     *            The array with the info messages as reference so adding
+     *            to it is possible.
+     */
+    private static function &initInfos()
+    {
+        if (isset($_SESSION["PhoolKit_Messages_infos"]))
+        {
+            $infos = &$_SESSION["PhoolKit_Messages_infos"];
+        }
+        else
+        {
+            $infos = array();
+            $_SESSION["PhoolKit_Messages_infos"] = &$infos;
+        }
+        return $infos;
+    }
+
+    /**
+     * Returns the array with the info messages.
+     * 
+     * @return array
+     *            The array with the info messages.
+     */
+    public static function getInfos()
+    {
+        return self::initInfos();
+    }
+    
+    /**
+     * Adds a new info message.
+     * 
+     * @param string $message
+     *            The info message to add.
+     */
+    public static function addInfo($message)
+    {
+        $infos = &self::initInfos();
+        $infos[] = $message;
+    } 
+    
+    /**
+     * Removes all info messages.
+     */
+    public static function removeInfos()
+    {
+        unset($_SESSION["PhoolKit_Messages_infos"]);
+    }
+    
+    /**
+     * Checks if info messages are available.
+     * 
+     * @return boolean
+     *            True if info messages are available, false if not.
+     */
+    public static function hasInfos()
+    {
+        return !!self::getInfos();
+    }
 
     /**
      * Returns all global error messages.
