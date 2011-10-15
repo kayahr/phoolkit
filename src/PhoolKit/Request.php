@@ -119,11 +119,22 @@ final class Request
         $baseDir = self::getBaseDir();
         if ($baseDir)
         {
-            $baseUrl = str_repeat("/..",
-                substr_count(realpath(dirname($_SERVER["SCRIPT_FILENAME"])),
-                DIRECTORY_SEPARATOR) - substr_count($baseDir,
-                DIRECTORY_SEPARATOR) + (isset($_SERVER["PATH_INFO"]) ?
-                substr_count($_SERVER["PATH_INFO"], "/") : 0));
+            // Count the number of folders of REQUEST_URI.
+            $requestUriFolders = substr_count($_SERVER["REQUEST_URI"], "/");
+
+            // Count the number of folders of SCRIPT_NAME.
+            $scriptNameFolders = substr_count($_SERVER["SCRIPT_NAME"], "/");
+            
+            // Count the number of folders of SCRIPT_FILENAME.
+            $scriptFilenameFolders = substr_count(realpath(dirname(
+                $_SERVER["SCRIPT_FILENAME"])), DIRECTORY_SEPARATOR);
+                
+            // Count the number of folders of the base directory.
+            $baseDirFolders = substr_count($baseDir, DIRECTORY_SEPARATOR);
+            
+            // Calculate the relative base url.
+            $baseUrl = str_repeat("/..", $scriptFilenameFolders - 
+                $baseDirFolders - $scriptNameFolders + $requestUriFolders);
             if (!$baseUrl)
                 $baseUrl = ".";
             else
@@ -131,8 +142,12 @@ final class Request
         }
         else
         {
+            // When no base directory was specified then we just assume the
+            // base URL is the current path.
             $baseUrl = ".";
         }
+        
+        // Cache and return the calculated base URL.
         self::$baseUrl = $baseUrl;
         return $baseUrl;
     }
@@ -305,5 +320,13 @@ final class Request
             return 1;
         });
         return $values;
-    }    
+    }
+
+    public static function buildUrl($url = "")
+    {
+        $baseUrl = self::getBaseUrl();
+        if (($baseUrl != ".") || !$url)
+            return $baseUrl . "/" . $url;
+        return $url;
+    }
 }

@@ -192,13 +192,7 @@ class HTML
      */
     public final static function url($url = "")
     {
-        $baseUrl = Request::getBaseUrl();
-        if (($baseUrl != ".") || !$url)
-        {
-            echo htmlspecialchars($baseUrl);
-            echo "/";
-        }
-        echo htmlspecialchars($url);
+        echo htmlspecialchars(Request::buildUrl($url));
     }
 
     /**
