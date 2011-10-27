@@ -121,7 +121,7 @@ class Log
             else if ($level == self::WARN) $levelStr = "WARN";
             else $levelStr = "ERROR";
             $timestamp = strftime("%Y-%m-%d %T");
-            $out = sprintf("%s %5s %s\n", $timestamp, $levelStr, $message); 
+            $out = sprintf("%s %-5s %s\n", $timestamp, $levelStr, $message); 
             if ($level == self::ERROR)
                 fprintf(STDERR, $out);
             else
