@@ -269,8 +269,6 @@ class HTML
      * Prints the attributes for a normal form input field (text, password and
      * hidden).
      *
-     * @param string $name
-     *            The form field name.
      * @param string $id
      *            Optional ID. Defaults to field name.
      */
@@ -295,7 +293,45 @@ class HTML
             $setAutoFocus ? " autofocus" : ""
         );
     }
-
+    
+    /**
+     * Prints the attributes for a form textarea.
+     *
+     * @param string $id
+     *            Optional ID. Defaults to field name.
+     */
+    public final static function textarea($id = NULL)
+    {
+        $form = self::getForm();
+        $name = self::getField();
+        $index = self::$fieldIndex;
+        if (!$id)
+        {
+            $id = $name;
+            if (!is_null($index)) $id .= "-$index";
+        }
+        if (!is_null($index)) $name .= "[$index]";
+        $setAutoFocus = !self::$alreadySetAutoFocus && $form->hasErrors($name);
+        if ($setAutoFocus) self::$alreadySetAutoFocus = $setAutoFocus;
+        printf("id=\"%s\" name=\"%s\"%s",
+            htmlspecialchars($id),
+            htmlspecialchars($name),
+            $setAutoFocus ? " autofocus" : ""
+        );
+    }
+    
+    /**
+     * Prints the value for a form textarea.
+     */
+    public final static function textareaValue()
+    {
+        $form = self::getForm();
+        $name = self::getField();
+        $value = $form->readProperty($name, self::$fieldIndex);
+        $index = self::$fieldIndex;
+        echo htmlspecialchars($value);
+    }
+    
     /**
      * Prints the attributes for a form field label.
      *
