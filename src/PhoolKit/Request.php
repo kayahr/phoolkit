@@ -195,6 +195,29 @@ final class Request
     }
     
     /**
+     * Ensures the request is for one of the specified media types. If no
+     * media type matches then a 406 error is sent back to the client. The
+     * first matching media type is returned.
+     * 
+     */
+    public static function requireMediaType($mediaTypes___)
+    {
+        $allowedMediaTypes = func_get_args();
+        $mediaTypes = self::getMediaTypes();
+        foreach ($mediaTypes as $mediaType)
+        {
+            $mediaType = self::matchMediaType($allowedMediaTypes, $mediaType);
+            if ($mediaType) return $mediaType; 
+        }        
+        header("HTTP/1.0 406 Not acceptable");
+        header("Content-Type: text/plain");
+        echo "Error 406\nNo acceptable media type found.\n";
+        echo "Required: " . join(", ", $allowedMediaTypes) . "\n"; 
+        echo "Requested: " . join(", ", $mediaTypes) . "\n";
+        exit();
+    }
+    
+    /**
      * Returns the list of accepted locales. The list is ordered by the
      * accept quality. So the first entry is the most preferred one.
      *
@@ -207,6 +230,7 @@ final class Request
      */
     public static function getLocales($available = NULL)
     {
+        if (!isset($_SERVER["HTTP_ACCEPT_LANGUAGE"])) return array();
         if (is_null(self::$locales))
         {
             self::$locales = self::parseValueRange(
@@ -257,6 +281,38 @@ final class Request
         // No match
         return NULL;
     }
+
+    /**
+     * Tries to match a media type against a list of available media types.
+     *
+     * @param array $available
+     *            The list of available media types.
+     * @param string $mediaType
+     *            The media type to check.
+     * @return string
+     *            The entry from the available media type which matches the
+     *            specified media type. NULL if non matches.
+     */
+    private static function matchMediaType($available, $mediaType)
+    {
+        $parts = preg_split("/[\\/;]/", $mediaType, 3);
+        $type = $parts[0];
+        $subtype = $parts[1];
+        foreach ($available as $availableMediaType)
+        {
+            $parts = preg_split("/[\\/;]/", $availableMediaType, 3);
+            $availableType = $parts[0];
+            $availableSubtype = $parts[1];
+            
+            if ($type != "*" && $type != $availableType) continue;
+            if ($subtype != "*" && $subtype != $availableSubtype) continue;
+            
+            return $availableMediaType;
+        } 
+    
+        // No match
+        return NULL;
+    }
     
     /**
      * Returns the preferred locale or the specified default locale if 
@@ -291,6 +347,7 @@ final class Request
     {
         $values = array();
         $ranges = explode(",", $valueRange);
+        $index = 0;
         foreach ($ranges as $range)
         {
             $params = explode(";", $range);
@@ -305,17 +362,24 @@ final class Request
                 if ($extName == "q")
                     $quality = floatval($extValue);
                 else
-                    $extensions[$extKey] = $extValue;
+                    $extensions[$extName] = $extValue;
             }
             $values[$value] = array(
                 "quality" => $quality,
+                "index" => $index,
                 "extensions" => $extensions
             );
+            $index++;
         }
         uasort($values, function($a, $b) {
             $q1 = $a["quality"];
             $q2 = $b["quality"];
-            if ($q1 == $q2) return 0;
+            if ($q1 == $q2)
+            {
+                $i1 = $a["index"];
+                $i2 = $b["index"];
+                return $i1 > $i2 ? 1 : -1;
+            }
             if ($q1 > $q2) return -1;
             return 1;
         });
