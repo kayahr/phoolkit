@@ -160,10 +160,12 @@ class HTML
      *
      * @param string $text
      *            The text to print.
+     * @param mixed $args___
+     *            Variable number of optional arguments used by the text.
      */
-    public final static function text($text)
+    public final static function text($text, $args___ = NULL)
     {
-        echo htmlspecialchars($text);
+        echo htmlspecialchars(call_user_func_array("sprintf", func_get_args()));
     }
 
     /**
