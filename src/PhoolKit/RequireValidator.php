@@ -47,6 +47,8 @@ final class RequireValidator implements Validator
     {
         foreach ($this->fields as $field)
         {
+            $value = $form->readProperty($field);
+            if (is_string($value) && strlen($value)) continue;
             if (!$form->readProperty($field)) $form->addError($field, 
                 I18N::getMessage("phoolkit.validation.required"));
         }
