@@ -492,12 +492,15 @@ class HTML
      *
      * @param Form $form
      *           The form to bind.
+     * @return Form
+     *           The bound form.
      */
     public final static function bindForm($form)
     {
         self::$form = $form;
         self::$field = NULL;
         self::$fieldIndex = NULL;
+        return $form;
     }
 
     /**
