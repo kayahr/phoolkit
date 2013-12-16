@@ -54,7 +54,7 @@ final class PasswordConfirmValidator implements Validator
         if ($form->readProperty($this->passwordField) !=
             $form->readProperty($this->passwordConfirmationField))
         {
-            $form->addError($field, I18N::getMessage(
+            $form->addError($this->passwordField, I18N::getMessage(
                 "phoolkit.validation.passwordConfirm"));
         }
     }
