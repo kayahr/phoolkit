@@ -35,7 +35,9 @@ final class I18N
         "phoolkit.validation.minLength" => "Please enter at least %d characters",
         "phoolkit.validation.maxLength" => "Please enter no more than %d characters",
         "phoolkit.validation.mask" => "Please enter a valid value",
-        "phoolkit.validation.passwordConfirm" => "Password doesn't match the confirmation"
+        "phoolkit.validation.passwordConfirm" => "Password doesn't match the confirmation",
+        "phoolkit.paging.previous" => "Previous",
+        "phoolkit.paging.next" => "Next"
     );
 
     /**

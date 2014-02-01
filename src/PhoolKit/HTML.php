@@ -659,4 +659,81 @@ class HTML
     {
         return Request::getParam($name, $default);
     }
+    
+    /**
+     * Displays the HTML code for intelligent paging.
+     * 
+     * @param integer $page
+     *            The current page number (Starting with 0).
+     * @param integer $pages
+     *            The number of existing pages.
+     * @param string $paramName
+     *            Optional page parameter name. If not specified then "page"
+     *            is used.
+     * @param string $url
+     *            Optional URL to use for the paging links. If not specified
+     *            then current URL is used.
+     */
+    public final static function paging($page, $pages, $paramName = "page", 
+        $url = null)
+    {
+        // Do nothing if there is only one page
+        if ($pages < 2) return;
+        
+        if (is_null($url))
+        {
+            $url = $_SERVER["REQUEST_URI"];
+        }
+        $url = str_replace("%", "%%", $url);        
+        $url = preg_replace("/([?&]$paramName=)[0-9]+/", "\\1%d", $url, 1, $count);
+        if (!$count)
+        {
+            if (strpos($url, "?") === false)
+                $url .= "?$paramName=%d";
+            else
+                $url .= "&$paramName=%d";
+        }
+        
+        if ($page)
+        {
+            printf('<a class="previous" href="%s">%s</a> ',
+                htmlspecialchars(Request::buildUrl(sprintf($url, $page - 1))), 
+                htmlspecialchars(I18N::getMessage("phoolkit.paging.previous")));
+        }
+              
+        for ($i = 0; $i < $pages; $i += 1)
+        {
+            if ($i == $page)
+            {
+                printf('<span class="current">%d</span> ', $i + 1);
+            }
+            else
+            {
+                printf('<a href="%s">%d</a> ', 
+                    htmlspecialchars(Request::buildUrl(sprintf($url, $i))), 
+                    $i + 1);
+            }
+            
+            // Skip entries between entry 3 and and 3 entries before current
+            if ($i == 2 && $i < $page - 5)
+            {
+                echo "... ";
+                $i = $page - 4;
+            }
+            
+            // Skip entries 3 behind current one and 3 before last one
+            if ($i > $page + 2 && $i < $pages - 5)
+            {
+                echo "... ";
+                $i = $pages - 4;
+            }
+        }
+            
+        if ($page < $pages - 1)
+        {
+            printf('<a class="next" href="%s">%s</a>', 
+                htmlspecialchars(Request::buildUrl(sprintf($url, $page + 1))), 
+                htmlspecialchars(I18N::getMessage("phoolkit.paging.next")));
+        }
+    }
 }
