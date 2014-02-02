@@ -78,6 +78,7 @@ final class I18N
      */
     public static function addMessages($messages)
     {
+        if (!$messages) return;
         foreach ($messages as $key => $message)
             self::$messages[$key] = $message;
     }
@@ -104,6 +105,6 @@ final class I18N
      */
     public static function loadMessages($filename)
     {
-        self::addMessages(include($filename));
+        self::addMessages(@include($filename));
     }
 }
